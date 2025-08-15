@@ -7,14 +7,15 @@ channel = connection.channel()
 
 ###########################################################################
 
-channel.queue_declare(queue='leilao_iniciado')
+channel.exchange_declare(exchange='inicio_leilao',
+                         exchange_type='fanout')
+result = channel.queue_declare(queue='', exclusive=True)
+queue_name = result.method.queue
+channel.queue_bind(exchange='inicio_leilao', queue=queue_name)
 
-def callback(ch, method, properties, body):
-    print(f" [x] Recebido: {body}")
 
-channel.basic_consume(queue='leilao_iniciado',
-                      on_message_callback=callback,
-                      auto_ack=True)
+
+
 
 ###########################################################################
 
@@ -32,4 +33,12 @@ channel.queue_declare(queue='lance_realizado')
 channel.basic_publish(exchange='', routing_key='lance_realizado',body=body_bytes)
 
 ###########################################################################
+
+def callback(ch, method, properties, body):
+    print(f"Mensagem recebida: {body.decode()}")
+    ch.basic_ack(delivery_tag=method.delivery_tag)
+
+channel.basic_consume(queue=queue_name,
+                      on_message_callback=callback)
+
 channel.start_consuming()
