@@ -12,15 +12,15 @@ leiloes = [
     {
         "id": "leilao_01",
         "descricao": "iphone",
-        "data_inicio": datetime.datetime(2025, 8, 15, 14, 49),
-        "data_fim": datetime.datetime(2025, 8, 15, 14, 50),
+        "data_inicio": datetime.datetime(2025, 8, 15, 12,10),
+        "data_fim": datetime.datetime(2025, 8, 15, 12, 50),
         "status": "pendente"
     },
     {
         "id": "leilao_02",
         "descricao": "pc gamer",
-        "data_inicio": datetime.datetime(2025, 8, 15, 14, 50),
-        "data_fim": datetime.datetime(2025, 8, 15, 14, 55),
+        "data_inicio": datetime.datetime(2025, 8, 15, 15, 9),
+        "data_fim": datetime.datetime(2025, 8, 15, 15, 55),
         "status": "pendente"
     }
 ]
@@ -40,7 +40,7 @@ while True:
 
         agora = datetime.datetime.now()
 
-        if leilao['status'] == 'pendente' and agora >= leilao['data_inicio']:
+        if leilao['status'] == 'pendente' and agora >= leilao['data_inicio'] and not agora >= leilao['data_fim']:
             leilao['status'] = 'ativo'
             print(f"leilao {leilao['id']} iniciado")
             mensagem = {
@@ -53,7 +53,7 @@ while True:
 
             channel.basic_publish(exchange='inicio_leilao', routing_key='', body=body)
 
-        elif leilao['status'] == 'ativo' and agora >= leilao['data_fim']:
+        elif leilao['status'] == 'ativo' and agora >= leilao['data_fim']: 
             leilao['status'] = 'encerrado'
             print(f"leilao {leilao['id']} finalizado")
 

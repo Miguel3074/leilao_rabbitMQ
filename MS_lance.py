@@ -72,7 +72,6 @@ channel.queue_bind(exchange='inicio_leilao', queue=queue_name)
 
 def callback(ch, method, properties, body):
     print(f"Mensagem recebida: {body.decode()}")
-    ch.basic_ack(delivery_tag=method.delivery_tag)
 
 channel.basic_consume(queue=queue_name,
                       on_message_callback=callback)
