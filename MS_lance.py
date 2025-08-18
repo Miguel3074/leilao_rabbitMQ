@@ -16,8 +16,14 @@ chaves_publicas = {
 
 channel.queue_declare(queue='lance_realizado')
 
+channel.queue_declare(queue='lance_validado')
+
+
 def buscar_leilao(id_leilao):
-    raise NotImplementedError
+    for leilao in leiloes_ativos: # nao implementado
+        if leilao['id'] == id_leilao:
+            return leilao
+    return None
 
 def callback_lance(ch, method, properties, body):
     msg = body.decode('utf-8')
@@ -27,18 +33,16 @@ def callback_lance(ch, method, properties, body):
     valor_do_lance = data.get('valor_do_lance')
     assinatura = data.get('assinatura_digital')
 
-###   SAO OS IF MALUCO LA Q A PROFESSORA QUER, NAO ESTAO FUNCIONANDO AINDA TODOS, N ENTENDI ESSA PSSWORD AI  ###
-
     if not all([id_leilao, id_usuario, valor_do_lance, assinatura]):
         return
 
-    chave_publica = chaves_publicas.get(id_usuario)
-    if not chave_publica or chave_publica != assinatura:
-        return
+    #chave_publica = chaves_publicas.get(id_usuario)
+    #if not chave_publica or chave_publica != assinatura:
+    #    return
     
-    leilao_encontrado = buscar_leilao(id_leilao)
-    if not leilao_encontrado or leilao_encontrado['status'] != 'ativo':
-        return
+    #leilao_encontrado = buscar_leilao(id_leilao)
+    #if not leilao_encontrado or leilao_encontrado['status'] != 'ativo':
+    #    return
 
     ultimo_lance_valor = ultimos_lances.get(id_leilao, 0)
     if valor_do_lance <= ultimo_lance_valor:
@@ -46,21 +50,19 @@ def callback_lance(ch, method, properties, body):
 
     ultimos_lances[id_leilao] = valor_do_lance
     print(f"lance valido de R${valor_do_lance} para o leilao {id_leilao} aceito")
+    mensagem = {
+        "id_leilao": id_leilao,
+        "id_usuario": id_usuario,
+        "valor_do_lance": valor_do_lance,
+        "tipo": 'lance_validado'
+    }
+    body_e = json.dumps(mensagem).encode('utf-8')
 
-        
+    channel.basic_publish(exchange='', routing_key='lance_validado', body=body_e)
+
     
 channel.basic_consume(queue='lance_realizado', on_message_callback=callback_lance, auto_ack=True)
 
-
-
-#----------------------------------#
-
-channel.queue_declare(queue='lance_validado')
-
-
-
-
-#----------------------------------#
 
 ###########################################################################
 channel.exchange_declare(exchange='inicio_leilao',
