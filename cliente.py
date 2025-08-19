@@ -11,6 +11,7 @@ connection = pika.BlockingConnection(
 )
 channel = connection.channel()
 
+
 CLIENTE_ID = f"cliente_{uuid.uuid4().hex[:8]}"
 CHAVE_PRIVADA = secrets.token_hex(16)
 leiloes_interessados = set()
@@ -54,6 +55,9 @@ def dar_lance(id_leilao, valor):
         print(f"   Leilões disponíveis: {', '.join(leiloes_conhecidos.keys())}")
         return
     
+    leiloes_interessados.add(id_leilao)
+    escutar_leilao(id_leilao)
+    
     if valor <= 0:
         print(f"Erro: Valor do lance deve ser maior que zero!")
         return
@@ -75,18 +79,11 @@ def dar_lance(id_leilao, valor):
 
         canal_envio.queue_declare(queue='lance_realizado')
         mensagem_json = json.dumps(dados_do_lance)
-        canal_envio.basic_publish(
-            exchange='', 
-            routing_key='lance_realizado',
-            body=mensagem_json.encode('utf-8')
-        )
+        canal_envio.basic_publish(exchange='',routing_key='lance_realizado',body=mensagem_json.encode('utf-8')        )
         connection_envio.close()
 
         print(f" Lance de R${valor} enviado para o leilão {id_leilao} ({leiloes_conhecidos[id_leilao]})")
         print(f"   Aguardando validação do servidor...")
-        
-        leiloes_interessados.add(id_leilao)
-        escutar_leilao(id_leilao)
 
     except Exception as e:
         print(f" Erro ao enviar lance: {e}")
@@ -96,15 +93,16 @@ def escutar_leilao(id_leilao):
     def callback_notificacao(ch, method, properties, body):
         msg = body.decode('utf-8')
         data = json.loads(msg)
-        tipo = data.get('tipo')
+
+        routing_key = method.routing_key
         
-        if tipo == 'lance_validado':
+        if routing_key.endswith('.lance'):
             print(f"\nNOVO LANCE NO LEILÃO {id_leilao}!")
             print(f"   Usuário: {data.get('id_usuario')}")
             print(f"   Valor: R${data.get('valor_do_lance')}")
             print("-" * 30)
             
-        elif tipo == 'leilao_vencedor':
+        if routing_key.endswith('.fim'):
             print(f"\n LEILÃO {id_leilao} FINALIZADO!")
             print(f"   Vencedor: {data.get('id_vencedor')}")
             print(f"   Valor final: R${data.get('valor_negociado')}")
@@ -123,7 +121,6 @@ def escutar_leilao(id_leilao):
             qname = result.method.queue
             
             ch_local.queue_bind(exchange='leiloes', queue=qname, routing_key=f"{id_leilao}.lance")
-            ch_local.queue_bind(exchange='leiloes', queue=qname, routing_key=f"{id_leilao}.vencedor")
             ch_local.queue_bind(exchange='leiloes', queue=qname, routing_key=f"{id_leilao}.fim")
             
             ch_local.basic_consume(queue=qname, on_message_callback=callback_notificacao, auto_ack=True)

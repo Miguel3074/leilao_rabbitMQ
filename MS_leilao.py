@@ -12,14 +12,14 @@ leiloes = [
         "id": "leilao_01",
         "descricao": "iphone",
         "data_inicio": datetime.datetime.now() + datetime.timedelta(seconds=5),
-        "data_fim": datetime.datetime.now() + datetime.timedelta(minutes=3),
+        "data_fim": datetime.datetime.now() + datetime.timedelta(minutes=1),
         "status": "pendente"
     },
     {
         "id": "leilao_02",
         "descricao": "pc gamer",
-        "data_inicio": datetime.datetime.now() + datetime.timedelta(seconds=10),
-        "data_fim": datetime.datetime.now() + datetime.timedelta(minutes=2),
+        "data_inicio": datetime.datetime.now() + datetime.timedelta(seconds=30),
+        "data_fim": datetime.datetime.now() + datetime.timedelta(minutes=5),
         "status": "pendente"
     }
 ]
@@ -28,10 +28,7 @@ leiloes = [
 
 
 channel.exchange_declare(exchange='leiloes', exchange_type='topic')
-
-
 channel.queue_declare(queue='leilao_finalizado')
-channel.queue_bind(exchange='leiloes', queue='leilao_finalizado', routing_key='*.fim')
 
 print("MS Leilão iniciado - monitorando leilões...")
 print(f"Leilões configurados:")
@@ -62,10 +59,9 @@ while True:
 
             mensagem = {
                 "id_leilao": leilao['id'],
-                "data_fim": leilao['data_fim'].isoformat()
             }
             body = json.dumps(mensagem).encode('utf-8')
             
-            channel.basic_publish(exchange='leiloes', routing_key=f"{leilao['id']}.fim", body=body)
+            channel.basic_publish(exchange='', routing_key='leilao_finalizado', body=body)
 
     time.sleep(1)
