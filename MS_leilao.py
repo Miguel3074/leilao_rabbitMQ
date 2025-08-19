@@ -7,6 +7,8 @@ connection = pika.BlockingConnection(
     pika.ConnectionParameters(host='localhost'))
 channel = connection.channel()
 
+channel.queue_purge(queue='leilao_finalizado')
+
 leiloes = [
     {
         "id": "leilao_01",
@@ -62,6 +64,6 @@ while True:
             }
             body = json.dumps(mensagem).encode('utf-8')
             
-            channel.basic_publish(exchange='', routing_key='leilao_finalizado', body=body)
+            channel.basic_publish(exchange='leiloes', routing_key='leilao_finalizado', body=body)
 
     time.sleep(1)

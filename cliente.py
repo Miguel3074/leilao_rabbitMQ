@@ -55,9 +55,10 @@ def dar_lance(id_leilao, valor):
         print(f"   Leilões disponíveis: {', '.join(leiloes_conhecidos.keys())}")
         return
     
-    leiloes_interessados.add(id_leilao)
-    escutar_leilao(id_leilao)
-    
+    if id_leilao not in leiloes_interessados:
+        leiloes_interessados.add(id_leilao)
+        escutar_leilao(id_leilao)
+        
     if valor <= 0:
         print(f"Erro: Valor do lance deve ser maior que zero!")
         return
