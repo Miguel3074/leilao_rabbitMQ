@@ -7,20 +7,18 @@ connection = pika.BlockingConnection(
     pika.ConnectionParameters(host='localhost'))
 channel = connection.channel()
 
-channel.queue_purge(queue='leilao_finalizado')
-
 leiloes = [
     {
         "id": "leilao_01",
         "descricao": "iphone",
-        "data_inicio": datetime.datetime.now() + datetime.timedelta(seconds=5),
-        "data_fim": datetime.datetime.now() + datetime.timedelta(minutes=1),
+        "data_inicio": datetime.datetime.now() + datetime.timedelta(seconds=1),
+        "data_fim": datetime.datetime.now() + datetime.timedelta(seconds=30),
         "status": "pendente"
     },
     {
         "id": "leilao_02",
         "descricao": "pc gamer",
-        "data_inicio": datetime.datetime.now() + datetime.timedelta(seconds=30),
+        "data_inicio": datetime.datetime.now() + datetime.timedelta(seconds=59),
         "data_fim": datetime.datetime.now() + datetime.timedelta(minutes=5),
         "status": "pendente"
     }
@@ -29,7 +27,8 @@ leiloes = [
 ###########################################################################
 
 
-channel.exchange_declare(exchange='leiloes', exchange_type='topic')
+channel.queue_declare(queue='leilao_iniciado')
+channel.exchange_declare(exchange='leiloes', exchange_type='fanout')
 channel.queue_declare(queue='leilao_finalizado')
 
 print("MS Leilão iniciado - monitorando leilões...")
@@ -53,7 +52,7 @@ while True:
             }
             body = json.dumps(mensagem).encode('utf-8')
 
-            channel.basic_publish(exchange='leiloes', routing_key='*.inicio', body=body)
+            channel.basic_publish(exchange='leiloes', routing_key='', body=body)
 
         elif leilao['status'] == 'ativo' and agora >= leilao['data_fim']: 
             leilao['status'] = 'encerrado'
@@ -64,6 +63,8 @@ while True:
             }
             body = json.dumps(mensagem).encode('utf-8')
             
-            channel.basic_publish(exchange='leiloes', routing_key='leilao_finalizado', body=body)
+            channel.basic_publish(exchange='', routing_key='leilao_finalizado', body=body)
+            connection.close()
+            time.sleep(1)
 
     time.sleep(1)

@@ -18,10 +18,10 @@ leiloes_interessados = set()
 leiloes_conhecidos = {}
 
 ###########################################################################
-channel.exchange_declare(exchange='leiloes', exchange_type='topic')
+channel.exchange_declare(exchange='leiloes', exchange_type='fanout')
 result = channel.queue_declare(queue='', exclusive=True)
 queue_name = result.method.queue
-channel.queue_bind(exchange='leiloes', queue=queue_name, routing_key='*.inicio')
+channel.queue_bind(exchange='leiloes', queue=queue_name)
 
 def callback_inicio_leilao(ch, method, properties, body):
     msg = body.decode('utf-8')
@@ -90,6 +90,8 @@ def dar_lance(id_leilao, valor):
         print(f" Erro ao enviar lance: {e}")
 
 ###########################################################################
+channel.exchange_declare(exchange='leilao', exchange_type='topic')
+
 def escutar_leilao(id_leilao):
     def callback_notificacao(ch, method, properties, body):
         msg = body.decode('utf-8')
@@ -121,8 +123,8 @@ def escutar_leilao(id_leilao):
             result = ch_local.queue_declare(queue='', exclusive=True)
             qname = result.method.queue
             
-            ch_local.queue_bind(exchange='leiloes', queue=qname, routing_key=f"{id_leilao}.lance")
-            ch_local.queue_bind(exchange='leiloes', queue=qname, routing_key=f"{id_leilao}.fim")
+            ch_local.queue_bind(exchange='leilao', queue=qname, routing_key=f"{id_leilao}.lance")
+            ch_local.queue_bind(exchange='leilao', queue=qname, routing_key=f"{id_leilao}.fim")
             
             ch_local.basic_consume(queue=qname, on_message_callback=callback_notificacao, auto_ack=True)
             print(f"Escutando eventos do leilão {id_leilao} via topic")

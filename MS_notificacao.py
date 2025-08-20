@@ -6,6 +6,7 @@ connection = pika.BlockingConnection(
 channel = connection.channel()
 
 ###########################################################################
+channel.exchange_declare(exchange='leilao', exchange_type='topic')
 
 def callback_lance_validado(ch, method, properties, body):
 
@@ -24,7 +25,7 @@ def callback_lance_validado(ch, method, properties, body):
         "valor_do_lance": valor_do_lance
     }
     body_envio = json.dumps(msg).encode('utf-8')
-    channel.basic_publish( exchange='leiloes', routing_key=f"{id_leilao}.lance", body=body_envio)
+    channel.basic_publish( exchange='leilao', routing_key=f"{id_leilao}.lance", body=body_envio)
 
 
 channel.queue_declare(queue='lance_validado')
@@ -51,7 +52,7 @@ def callback_leilao_vencedor(ch, method, properties, body):
         "valor_negociado": valor_do_lance
     }
     body_envio = json.dumps(msg).encode('utf-8')
-    channel.basic_publish( exchange='leiloes', routing_key=f"{id_leilao}.fim", body=body_envio)
+    channel.basic_publish( exchange='leilao', routing_key=f"{id_leilao}.fim", body=body_envio)
 
 channel.queue_declare(queue='leilao_vencedor')
 channel.basic_consume(queue='leilao_vencedor', on_message_callback=callback_leilao_vencedor, auto_ack=True)

@@ -72,10 +72,10 @@ channel.basic_consume(queue='lance_realizado', on_message_callback=callback_lanc
 
 ###########################################################################
 
-channel.exchange_declare(exchange='leiloes', exchange_type='topic')
+channel.exchange_declare(exchange='leiloes', exchange_type='fanout')
 result = channel.queue_declare(queue='', exclusive=True)
 queue_name = result.method.queue
-channel.queue_bind(exchange='leiloes', queue=queue_name, routing_key='*.inicio')
+channel.queue_bind(exchange='leiloes', queue=queue_name)
 
 def callback_inicio_leilao(ch, method, properties, body):
     print(f"Mensagem recebida: {body.decode()}")
@@ -85,12 +85,14 @@ channel.basic_consume(queue=queue_name, on_message_callback=callback_inicio_leil
 
 ###########################################################################
 
+channel.queue_declare(queue='leilao_finalizado')
 channel.queue_declare(queue='leilao_vencedor')
 
 def callback_leilao_finalizado(ch, method, properties, body):
     msg = body.decode('utf-8')
     data = json.loads(msg)
     id_leilao = data.get('id_leilao')
+    print(f"Leilão {id_leilao} finalizado.")
 
     if not id_leilao:
         return
@@ -109,11 +111,11 @@ def callback_leilao_finalizado(ch, method, properties, body):
             "valor_do_lance": ultimos_lances[id_leilao]['valor_do_lance']
         }
     
-    print(f"Leilão {id_leilao} finalizado.")
     body_vencedor = json.dumps(mensagem).encode('utf-8')
     channel.basic_publish(exchange='', routing_key='leilao_vencedor', body=body_vencedor)  
     
-channel.basic_consume(queue='leilao_finalizado', on_message_callback=callback_leilao_finalizado, auto_ack=True)
+
+channel.basic_consume(queue='leilao_finalizado',auto_ack=True, on_message_callback=callback_leilao_finalizado)
 
 ###########################################################################
 
