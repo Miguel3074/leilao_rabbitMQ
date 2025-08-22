@@ -1,5 +1,9 @@
 import json
 import pika
+import base64
+from Crypto.Signature import pkcs1_15
+from Crypto.Hash import SHA256
+from Crypto.PublicKey import RSA
 
 connection = pika.BlockingConnection(
     pika.ConnectionParameters(host='localhost'))
@@ -7,10 +11,6 @@ channel = connection.channel()
 
 
 ultimos_lances = {}
-chaves_publicas = {
-    'cliente_1': '123456',
-    'cliente_2': '654321'
-}
 
 ###########################################################################
 
@@ -19,30 +19,38 @@ channel.queue_declare(queue='lance_realizado')
 channel.queue_declare(queue='lance_validado')
 
 
-def buscar_leilao(id_leilao):
-    for leilao in leiloes_ativos: # nao implementado
-        if leilao['id'] == id_leilao:
-            return leilao
-    return None
-
 def callback_lance(ch, method, properties, body):
     msg = body.decode('utf-8')
     data = json.loads(msg)
     id_leilao = data.get('id_leilao')
     id_usuario = data.get('id_usuario')
     valor_do_lance = data.get('valor_do_lance')
-    assinatura = data.get('assinatura_digital')
+    assinatura_base64 = data.get('assinatura')
 
-    if not all([id_leilao, id_usuario, valor_do_lance, assinatura]):
+    if not all([id_leilao, id_usuario, valor_do_lance, assinatura_base64]):
+        print(" [x] Mensagem de lance incompleta recebida.")
         return
 
-    #chave_publica = chaves_publicas.get(id_usuario)
-    #if not chave_publica or chave_publica != assinatura:
-    #    return
-    
-    #leilao_encontrado = buscar_leilao(id_leilao)
-    #if not leilao_encontrado or leilao_encontrado['status'] != 'ativo':
-    #    return
+    try:
+        with open(f'public_{id_usuario}.bin', 'rb') as f:
+            key = RSA.import_key(f.read())
+
+        msg_original = b'SistemasDistribuidos2025.2'
+        h = SHA256.new(msg_original)
+
+        assinatura_bytes = base64.b64decode(assinatura_base64)
+
+        pkcs1_15.new(key).verify(h, assinatura_bytes)
+        
+        print(f"Assinatura do usuário {id_usuario} VÁLIDA.")
+        print(f" Lance de R${valor_do_lance} recebido para o leilão {id_leilao}")
+
+    except (ValueError, TypeError):
+        print(f"Assinatura do usuário {id_usuario} INVÁLIDA. Lance descartado.")
+    except FileNotFoundError:
+        print(f"Chave pública 'public_{id_usuario}' não encontrada. Lance descartado.")
+    except Exception as e:
+        print(f"Ocorreu um erro inesperado ao processar o lance: {e}")
 
     ultimo_lance_valor = (ultimos_lances.get(id_leilao, {})).get('valor', 0)
 

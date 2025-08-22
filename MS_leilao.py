@@ -11,7 +11,7 @@ leiloes = [
     {
         "id": "leilao_01",
         "descricao": "iphone",
-        "data_inicio": datetime.datetime.now() + datetime.timedelta(seconds=1),
+        "data_inicio": datetime.datetime.now() + datetime.timedelta(seconds=4),
         "data_fim": datetime.datetime.now() + datetime.timedelta(seconds=30),
         "status": "pendente"
     },

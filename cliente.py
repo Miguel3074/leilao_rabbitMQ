@@ -5,6 +5,12 @@ import hmac
 import threading
 import uuid
 import secrets
+import base64 
+import sys
+from Crypto.PublicKey import RSA
+from Crypto.Signature import pkcs1_15
+from Crypto.Hash import SHA256
+from Crypto.PublicKey import RSA
 
 connection = pika.BlockingConnection(
     pika.ConnectionParameters(host='localhost')
@@ -12,10 +18,24 @@ connection = pika.BlockingConnection(
 channel = connection.channel()
 
 
-CLIENTE_ID = f"cliente_{uuid.uuid4().hex[:8]}"
-CHAVE_PRIVADA = secrets.token_hex(16)
+if len(sys.argv) > 1:
+    CLIENTE_ID = sys.argv[1] # Pega o primeiro argumento (ex: "cliente_01")
+else:
+    print("ERRO: ID do cliente não fornecido na linha de comando.")
+    print("Uso: python cliente.py <id_do_cliente>")
+    sys.exit(1)
 leiloes_interessados = set()
 leiloes_conhecidos = {}
+
+secret_code = "alemDosBits"
+key = RSA.generate(2048)
+private_key = key.export_key()
+with open(f"private_{CLIENTE_ID}.bin", "wb") as f:
+    f.write(private_key)
+
+public_key = key.publickey().export_key()
+with open(f"public_{CLIENTE_ID}.bin", "wb") as f:
+    f.write(public_key)
 
 ###########################################################################
 channel.exchange_declare(exchange='leiloes', exchange_type='fanout')
@@ -40,14 +60,13 @@ def callback_inicio_leilao(ch, method, properties, body):
 channel.basic_consume(queue=queue_name, on_message_callback=callback_inicio_leilao, auto_ack=True)
 
 ###########################################################################
-def criar_assinatura_digital(dados):
-    mensagem = f"{dados['id_leilao']}{dados['id_usuario']}{dados['valor_do_lance']}"
-    assinatura = hmac.new(
-        CHAVE_PRIVADA.encode('utf-8'),
-        mensagem.encode('utf-8'),
-        hashlib.sha256
-    ).hexdigest()
-    return assinatura
+
+msg = b'SistemasDistribuidos2025.2'
+chave = RSA.import_key(open(f'private_{CLIENTE_ID}.bin').read())
+aga = SHA256.new(msg)
+assinatura = pkcs1_15.new(chave).sign(aga)
+
+###########################################################################
 
 def dar_lance(id_leilao, valor):
     if id_leilao not in leiloes_conhecidos:
@@ -63,14 +82,14 @@ def dar_lance(id_leilao, valor):
         print(f"Erro: Valor do lance deve ser maior que zero!")
         return
     
+    assinatura_base64 = base64.b64encode(assinatura).decode('utf-8')
+
     dados_do_lance = {
-        "id_leilao": id_leilao,
         "id_usuario": CLIENTE_ID,
-        "valor_do_lance": valor
+        "id_leilao": id_leilao,
+        "valor_do_lance": valor,
+        "assinatura": assinatura_base64 
     }
-    
-    assinatura = criar_assinatura_digital(dados_do_lance)
-    dados_do_lance["assinatura_digital"] = assinatura
     
     try:
         connection_envio = pika.BlockingConnection(
