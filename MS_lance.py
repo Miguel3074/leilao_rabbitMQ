@@ -52,7 +52,7 @@ def callback_lance(ch, method, properties, body):
     except Exception as e:
         print(f"Ocorreu um erro inesperado ao processar o lance: {e}")
 
-    ultimo_lance_valor = (ultimos_lances.get(id_leilao, {})).get('valor', 0)
+    ultimo_lance_valor = (ultimos_lances.get(id_leilao, {})).get('valor_do_lance', 0)
 
     if valor_do_lance <= ultimo_lance_valor:
         print(f"Lance de R${valor_do_lance} para o leilão {id_leilao} recusado (menor ou igual ao melhor lance).")

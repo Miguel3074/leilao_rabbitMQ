@@ -12,14 +12,14 @@ leiloes = [
         "id": "leilao_01",
         "descricao": "iphone",
         "data_inicio": datetime.datetime.now() + datetime.timedelta(seconds=4),
-        "data_fim": datetime.datetime.now() + datetime.timedelta(seconds=30),
+        "data_fim": datetime.datetime.now() + datetime.timedelta(seconds=60),
         "status": "pendente"
     },
     {
         "id": "leilao_02",
         "descricao": "pc gamer",
         "data_inicio": datetime.datetime.now() + datetime.timedelta(seconds=10),
-        "data_fim": datetime.datetime.now() + datetime.timedelta(seconds=35),
+        "data_fim": datetime.datetime.now() + datetime.timedelta(seconds=70),
         "status": "pendente"
     }
 ]
