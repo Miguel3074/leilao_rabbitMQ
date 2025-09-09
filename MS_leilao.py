@@ -18,8 +18,8 @@ leiloes = [
     {
         "id": "leilao_02",
         "descricao": "pc gamer",
-        "data_inicio": datetime.datetime.now() + datetime.timedelta(seconds=59),
-        "data_fim": datetime.datetime.now() + datetime.timedelta(minutes=5),
+        "data_inicio": datetime.datetime.now() + datetime.timedelta(seconds=10),
+        "data_fim": datetime.datetime.now() + datetime.timedelta(seconds=35),
         "status": "pendente"
     }
 ]
@@ -51,7 +51,6 @@ while True:
                 "data_fim": leilao['data_fim'].isoformat()
             }
             body = json.dumps(mensagem).encode('utf-8')
-
             channel.basic_publish(exchange='leiloes', routing_key='', body=body)
 
         elif leilao['status'] == 'ativo' and agora >= leilao['data_fim']: 
@@ -64,7 +63,6 @@ while True:
             body = json.dumps(mensagem).encode('utf-8')
             
             channel.basic_publish(exchange='', routing_key='leilao_finalizado', body=body)
-            connection.close()
             time.sleep(1)
 
     time.sleep(1)

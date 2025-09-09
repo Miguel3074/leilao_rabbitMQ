@@ -1,10 +1,6 @@
 import json
 import pika
-import hashlib
-import hmac
 import threading
-import uuid
-import secrets
 import base64 
 import sys
 from Crypto.PublicKey import RSA
