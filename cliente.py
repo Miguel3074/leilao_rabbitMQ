@@ -120,7 +120,7 @@ def escutar_leilao(id_leilao):
             print(f"   Valor: R${data.get('valor_do_lance')}")
             print("-" * 30)
             
-        if routing_key.endswith('.fim'):
+        elif routing_key.endswith('.fim'):
             print(f"\n LEILÃO {id_leilao} FINALIZADO!")
             print(f"   Vencedor: {data.get('id_vencedor')}")
             print(f"   Valor final: R${data.get('valor_negociado')}")
