@@ -82,14 +82,14 @@ channel.basic_consume(queue='lance_realizado', on_message_callback=callback_lanc
 
 channel.exchange_declare(exchange='leiloes', exchange_type='fanout')
 result = channel.queue_declare(queue='', exclusive=True)
-queue_name = result.method.queue
-channel.queue_bind(exchange='leiloes', queue=queue_name)
+fila_inicio_leilao = result.method.queue
+channel.queue_bind(exchange='leiloes', queue=fila_inicio_leilao)
 
 def callback_inicio_leilao(ch, method, properties, body):
     print(f"Mensagem recebida: {body.decode()}")
 
 
-channel.basic_consume(queue=queue_name, on_message_callback=callback_inicio_leilao, auto_ack=True)
+channel.basic_consume(queue=fila_inicio_leilao, on_message_callback=callback_inicio_leilao, auto_ack=True)
 
 ###########################################################################
 

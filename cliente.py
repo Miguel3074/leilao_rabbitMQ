@@ -36,8 +36,8 @@ with open(f"public_{CLIENTE_ID}.bin", "wb") as f:
 ###########################################################################
 channel.exchange_declare(exchange='leiloes', exchange_type='fanout')
 result = channel.queue_declare(queue='', exclusive=True)
-queue_name = result.method.queue
-channel.queue_bind(exchange='leiloes', queue=queue_name)
+fila_inicio_leilao = result.method.queue
+channel.queue_bind(exchange='leiloes', queue=fila_inicio_leilao)
 
 def callback_inicio_leilao(ch, method, properties, body):
     msg = body.decode('utf-8')
@@ -53,7 +53,7 @@ def callback_inicio_leilao(ch, method, properties, body):
     print(f"   Data fim: {data.get('data_fim')}")
     print("-" * 50)
 
-channel.basic_consume(queue=queue_name, on_message_callback=callback_inicio_leilao, auto_ack=True)
+channel.basic_consume(queue=fila_inicio_leilao, on_message_callback=callback_inicio_leilao, auto_ack=True)
 
 ###########################################################################
 
@@ -136,12 +136,12 @@ def escutar_leilao(id_leilao):
             ch_local = conn_local.channel()
 
             result = ch_local.queue_declare(queue='', exclusive=True)
-            qname = result.method.queue
+            fila_leilao_notificacao = result.method.queue
             
-            ch_local.queue_bind(exchange='leilao', queue=qname, routing_key=f"{id_leilao}.lance")
-            ch_local.queue_bind(exchange='leilao', queue=qname, routing_key=f"{id_leilao}.fim")
+            ch_local.queue_bind(exchange='leilao', queue=fila_leilao_notificacao, routing_key=f"{id_leilao}.lance")
+            ch_local.queue_bind(exchange='leilao', queue=fila_leilao_notificacao, routing_key=f"{id_leilao}.fim")
             
-            ch_local.basic_consume(queue=qname, on_message_callback=callback_notificacao, auto_ack=True)
+            ch_local.basic_consume(queue=fila_leilao_notificacao, on_message_callback=callback_notificacao, auto_ack=True)
             print(f"Escutando eventos do leilão {id_leilao} via topic")
             
             ch_local.start_consuming()
