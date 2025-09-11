@@ -23,7 +23,6 @@ else:
 leiloes_interessados = set()
 leiloes_conhecidos = {}
 
-secret_code = "alemDosBits"
 key = RSA.generate(2048)
 private_key = key.export_key()
 with open(f"private_{CLIENTE_ID}.bin", "wb") as f:

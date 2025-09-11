@@ -47,10 +47,13 @@ def callback_lance(ch, method, properties, body):
 
     except (ValueError, TypeError):
         print(f"Assinatura do usuário {id_usuario} INVÁLIDA. Lance descartado.")
+        return
     except FileNotFoundError:
         print(f"Chave pública 'public_{id_usuario}' não encontrada. Lance descartado.")
+        return
     except Exception as e:
         print(f"Ocorreu um erro inesperado ao processar o lance: {e}")
+        return
 
     ultimo_lance_valor = (ultimos_lances.get(id_leilao, {})).get('valor_do_lance', 0)
 
