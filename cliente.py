@@ -126,6 +126,8 @@ def escutar_leilao(id_leilao):
             print(f"   Valor final: R${data.get('valor_negociado')}")
             if data.get('id_vencedor') == CLIENTE_ID:
                 print("    PARABÉNS! VOCÊ VENCEU!")
+            if id_leilao in leiloes_conhecidos:
+                del leiloes_conhecidos[id_leilao]
             print("=" * 50)
 
     def thread_listener():
