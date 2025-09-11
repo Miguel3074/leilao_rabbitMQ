@@ -81,9 +81,10 @@ def callback_lance(ch, method, properties, body):
     body_e = json.dumps(mensagem).encode('utf-8')
 
     channel.basic_publish(exchange='', routing_key='lance_validado', body=body_e)
+    ch.basic_ack(delivery_tag=method.delivery_tag)
 
     
-channel.basic_consume(queue='lance_realizado', on_message_callback=callback_lance, auto_ack=True)
+channel.basic_consume(queue='lance_realizado', on_message_callback=callback_lance, auto_ack=False)
 
 
 ###########################################################################
@@ -99,9 +100,10 @@ def callback_inicio_leilao(ch, method, properties, body):
     id_leilao = data.get('id_leilao')
     descricao = data.get('descricao')
     leiloes_ativos[id_leilao] = descricao
+    ch.basic_ack(delivery_tag=method.delivery_tag)
 
 
-channel.basic_consume(queue=fila_inicio_leilao, on_message_callback=callback_inicio_leilao, auto_ack=True)
+channel.basic_consume(queue=fila_inicio_leilao, on_message_callback=callback_inicio_leilao, auto_ack=False)
 
 ###########################################################################
 
@@ -135,10 +137,11 @@ def callback_leilao_finalizado(ch, method, properties, body):
         }
     
     body_vencedor = json.dumps(mensagem).encode('utf-8')
-    channel.basic_publish(exchange='', routing_key='leilao_vencedor', body=body_vencedor)  
+    channel.basic_publish(exchange='', routing_key='leilao_vencedor', body=body_vencedor)
+    ch.basic_ack(delivery_tag=method.delivery_tag)
     
 
-channel.basic_consume(queue='leilao_finalizado',auto_ack=True, on_message_callback=callback_leilao_finalizado)
+channel.basic_consume(queue='leilao_finalizado',auto_ack=False, on_message_callback=callback_leilao_finalizado)
 
 ###########################################################################
 

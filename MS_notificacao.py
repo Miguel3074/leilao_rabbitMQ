@@ -26,10 +26,11 @@ def callback_lance_validado(ch, method, properties, body):
     }
     body_envio = json.dumps(msg).encode('utf-8')
     channel.basic_publish( exchange='leilao', routing_key=f"{id_leilao}.lance", body=body_envio)
+    ch.basic_ack(delivery_tag=method.delivery_tag)
 
 
 channel.queue_declare(queue='lance_validado')
-channel.basic_consume(queue='lance_validado', on_message_callback=callback_lance_validado, auto_ack=True)
+channel.basic_consume(queue='lance_validado', on_message_callback=callback_lance_validado, auto_ack=False)
 
 
 
@@ -53,9 +54,10 @@ def callback_leilao_vencedor(ch, method, properties, body):
     }
     body_envio = json.dumps(msg).encode('utf-8')
     channel.basic_publish( exchange='leilao', routing_key=f"{id_leilao}.fim", body=body_envio)
+    ch.basic_ack(delivery_tag=method.delivery_tag)
 
 channel.queue_declare(queue='leilao_vencedor')
-channel.basic_consume(queue='leilao_vencedor', on_message_callback=callback_leilao_vencedor, auto_ack=True)
+channel.basic_consume(queue='leilao_vencedor', on_message_callback=callback_leilao_vencedor, auto_ack=False)
 
 
 

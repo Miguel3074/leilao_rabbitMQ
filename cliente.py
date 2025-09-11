@@ -51,8 +51,9 @@ def callback_inicio_leilao(ch, method, properties, body):
     print(f"   Data início: {data.get('data_inicio')}")
     print(f"   Data fim: {data.get('data_fim')}")
     print("-" * 50)
+    ch.basic_ack(delivery_tag=method.delivery_tag)
 
-channel.basic_consume(queue=fila_inicio_leilao, on_message_callback=callback_inicio_leilao, auto_ack=True)
+channel.basic_consume(queue=fila_inicio_leilao, on_message_callback=callback_inicio_leilao, auto_ack=False)
 
 ###########################################################################
 
@@ -128,6 +129,7 @@ def escutar_leilao(id_leilao):
             if id_leilao in leiloes_conhecidos:
                 del leiloes_conhecidos[id_leilao]
             print("=" * 50)
+        ch.basic_ack(delivery_tag=method.delivery_tag)
 
     def thread_listener():
         try:
@@ -142,7 +144,7 @@ def escutar_leilao(id_leilao):
             ch_local.queue_bind(exchange='leilao', queue=fila_leilao_notificacao, routing_key=f"{id_leilao}.lance")
             ch_local.queue_bind(exchange='leilao', queue=fila_leilao_notificacao, routing_key=f"{id_leilao}.fim")
             
-            ch_local.basic_consume(queue=fila_leilao_notificacao, on_message_callback=callback_notificacao, auto_ack=True)
+            ch_local.basic_consume(queue=fila_leilao_notificacao, on_message_callback=callback_notificacao, auto_ack=False)
             print(f"Escutando eventos do leilão {id_leilao} via topic")
             
             ch_local.start_consuming()
