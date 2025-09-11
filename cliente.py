@@ -65,7 +65,7 @@ assinatura = pkcs1_15.new(chave).sign(aga)
 
 def dar_lance(id_leilao, valor):
     if id_leilao not in leiloes_conhecidos:
-        print(f"Erro: Leilão '{id_leilao}' não existe!")
+        print(f"Erro: Leilão '{id_leilao}' não existe ou já encerrou!")
         print(f"   Leilões disponíveis: {', '.join(leiloes_conhecidos.keys())}")
         return
     
@@ -163,6 +163,8 @@ def interface_usuario():
     print("  3 - Ver todos os leilões ativos")
     print("  4 - Sair do sistema")
     print("="*60)
+
+    saiu = False
     
     while True:
         try:
@@ -192,6 +194,7 @@ def interface_usuario():
                     
             elif opcao == '4':
                 print("Saindo do sistema...")
+                saiu = True
                 break
                 
             else:
@@ -202,6 +205,9 @@ def interface_usuario():
             break
         except Exception as e:
             print(f"Erro: {e}")
+
+        if saiu:
+            break
 
 ###########################################################################
 thread_interface = threading.Thread(target=interface_usuario, daemon=True)
