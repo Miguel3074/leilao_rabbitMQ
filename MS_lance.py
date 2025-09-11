@@ -9,7 +9,7 @@ connection = pika.BlockingConnection(
     pika.ConnectionParameters(host='localhost'))
 channel = connection.channel()
 
-
+leiloes_ativos = {}
 ultimos_lances = {}
 
 ###########################################################################
@@ -29,6 +29,11 @@ def callback_lance(ch, method, properties, body):
 
     if not all([id_leilao, id_usuario, valor_do_lance, assinatura_base64]):
         print(" [x] Mensagem de lance incompleta recebida.")
+        return
+    
+    if id_leilao not in leiloes_ativos:
+        print(f"Erro: Leilão '{id_leilao}' não existe ou já encerrou!")
+        print(f"   Leilões disponíveis: {', '.join(leiloes_ativos.keys())}")
         return
 
     try:
@@ -89,7 +94,11 @@ fila_inicio_leilao = result.method.queue
 channel.queue_bind(exchange='leiloes', queue=fila_inicio_leilao)
 
 def callback_inicio_leilao(ch, method, properties, body):
-    print(f"Mensagem recebida: {body.decode()}")
+    msg = body.decode('utf-8')
+    data = json.loads(msg)
+    id_leilao = data.get('id_leilao')
+    descricao = data.get('descricao')
+    leiloes_ativos[id_leilao] = descricao
 
 
 channel.basic_consume(queue=fila_inicio_leilao, on_message_callback=callback_inicio_leilao, auto_ack=True)
@@ -104,6 +113,9 @@ def callback_leilao_finalizado(ch, method, properties, body):
     data = json.loads(msg)
     id_leilao = data.get('id_leilao')
     print(f"Leilão {id_leilao} finalizado.")
+
+    if id_leilao in leiloes_ativos:
+                del leiloes_ativos[id_leilao]
 
     if not id_leilao:
         return

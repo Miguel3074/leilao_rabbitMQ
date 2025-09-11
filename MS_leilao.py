@@ -18,8 +18,8 @@ leiloes = [
     {
         "id": "leilao_02",
         "descricao": "pc gamer",
-        "data_inicio": datetime.datetime.now() + datetime.timedelta(seconds=10),
-        "data_fim": datetime.datetime.now() + datetime.timedelta(seconds=70),
+        "data_inicio": datetime.datetime.now() + datetime.timedelta(seconds=30),
+        "data_fim": datetime.datetime.now() + datetime.timedelta(seconds=120),
         "status": "pendente"
     }
 ]
